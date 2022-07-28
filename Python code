@@ -34,4 +34,226 @@ data["Years_old"] = 2021 - data["YrSold"]
 data = data.drop(["YrSold"], axis =1)
 data.head()
 
+data = data.drop(["Alley","PoolQC", "Fence", "MiscFeature", "Id", "FireplaceQu"], axis=1)
+data.shape
 
+plt.hist(data["OverallQual"])
+plt.title("Distribution of Overall Quality predictor")
+plt.xlabel("Overall Quality")
+plt.ylabel("Frequency")
+plt.show()
+
+pd.options.display.min_rows = 115
+data.isnull().sum().sort_values(ascending=False)
+
+mean = data["LotFrontage"].mean()
+mean
+
+pd.options.display.min_rows = 115
+data.isnull().sum().sort_values(ascending=False)
+
+data1 = pd.get_dummies(data)
+data1.shape
+
+train_final = data1.iloc[0:1460,:]
+
+test_final = data1.iloc[1460:,:]
+
+train_final.shape
+
+train_final1 = train_final.dropna()
+train_final1.shape
+
+Ytrain = train_final1.loc [:, "SalePrice"]
+Ytrain.shape
+
+Xtrain = train_final1.drop(["SalePrice"], axis=1)
+Xtrain.shape
+
+
+test_final.shape
+
+#Defining X and y for Regression models
+X, y = Xtrain, Ytrain
+
+sns.heatmap(Xtrain.corr())
+
+z = pd.DataFrame(Ytrain)
+plt.hist(z)
+plt.title("Distribution of Sale Price")
+plt.xlabel("Sale Price")
+plt.ylabel("Frequency")
+plt.show()
+
+#Running a simple Linear Regression to understand the distribution of error terms
+
+X_train, X_test , y_train, y_test = train_test_split(X, y, test_size=0.80, random_state=1)
+
+model1 = LinearRegression (fit_intercept = True)
+model1.fit(X_train, y_train)
+
+ypred = model1.predict(X_test)
+eps = y_test - ypred
+
+plt.scatter(ypred, eps)
+plt.title("Residuals and Y predictions")
+plt.xlabel("y hat")
+plt.ylabel("Residuals")
+plt.show()
+
+#Running a simple Linear Regression to understand the distribution of error terms
+
+X_train, X_test , y_train, y_test = train_test_split(X, y, test_size=0.80, random_state=1)
+y_train = np.log(y_train)
+y_test = np.log(y_test)
+model1 = LinearRegression (fit_intercept = True)
+model1.fit(X_train, y_train)
+
+ypred = model1.predict(X_test)
+eps = y_test - ypred
+
+plt.scatter(ypred, eps)
+plt.show()
+
+#Running a simple Linear Regression to understand the distribution of error terms
+
+X_train, X_test , y_train, y_test = train_test_split(X, y, test_size=0.80, random_state=1)
+y_train = np.log(y_train)
+y_test = np.log(y_test)
+
+model1 = LinearRegression (fit_intercept = True)
+model1.fit(X_train, y_train)
+
+ypred = model1.predict(X_test)
+eps = y_test - ypred
+TestRMSE = np.sqrt(mean_squared_error(y_test,ypred))
+print(TestRMSE)
+
+##Linear Regression with Cross Validation
+
+model2 = LinearRegression (fit_intercept = True)
+y1 = np.log(y)
+
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state=1)
+scores = cross_val_score(model2, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores1 = cross_val_score(model2, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error:" +str(mean(absolute(scores)))+ "Std Deviation: " +str(std(absolute(scores))) )
+#print("RMSE error:" +str(mean(scores1))+ "Std Deviation: " +str(std(scores1)) )
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+#Lasso - 80% training set to check the appropriate value of alpha
+# Split data into training and test sets
+X_train, X_test , y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=1)
+y_train = np.log(y_train)
+y_test = np.log(y_test)
+alphas = np.array([0.000001, 0.000003, 0.000007, 0.00001, 0.0001, 0.001])
+model_lasso = Lasso(max_iter = 100000, normalize = True)
+coefs = []
+MSE = []
+for a in alphas:
+    model_lasso.set_params(alpha=a)
+    model_lasso.fit(X_train, y_train)
+    coefs.append(model_lasso.coef_)
+    MSE.append(mean_squared_error(y_test, model_lasso.predict(X_test)))
+RMSE = np.sqrt(MSE)
+plt.plot(RMSE)
+plt.xlabel("alpha")
+plt.ylabel("RMSE")
+plt.show()
+
+##Lasso Regression
+
+y1 = np.log(Ytrain)
+model2 = Lasso(alpha = 0.001)
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state=1)
+scores = cross_val_score(model2, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores = absolute(scores)
+scores1 = cross_val_score(model2, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error: " +str(mean(scores)) + " Standard Deviation: " +str(std(scores)))
+#print("RMSE error: " +str(mean(scores1)) + " Standard Deviation: " +str(std(scores1)))
+
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+## Extra Tree Regressor - CV
+y1 = np.log(Ytrain)
+model3 = ExtraTreesRegressor(n_estimators=100, random_state=0)
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state = 1)
+scores = cross_val_score(model3, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores = absolute(scores)
+scores1 = cross_val_score(model3, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error: " +str(mean(scores)) + " Standard Deviation: " +str(std(scores)))
+#print("RMSE error: " +str(mean(scores1)) + " Standard Deviation: " +str(std(scores1)))
+
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+#XGBoost
+y1 = np.log(Ytrain)
+model4 = XGBRegressor()
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state = 1)
+scores = cross_val_score(model4, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores = absolute(scores)
+scores1 = cross_val_score(model4, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error: " +str(mean(scores)) + " Standard Deviation: " +str(std(scores)))
+#print("RMSE error: " +str(mean(scores1)) + " Standard Deviation: " +str(std(scores1)))
+
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+#XGBoost
+y1 = Ytrain
+model4 = XGBRegressor()
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state = 1)
+scores = cross_val_score(model4, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores = absolute(scores)
+scores1 = cross_val_score(model4, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error: " +str(mean(scores)) + " Standard Deviation: " +str(std(scores)))
+#print("RMSE error: " +str(mean(scores1)) + " Standard Deviation: " +str(std(scores1)))
+
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+#Random Forest
+y1 = np.log(Ytrain)
+model5 = RandomForestRegressor(max_features='sqrt', n_estimators=250, random_state=1)
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state = 1)
+scores = cross_val_score(model5, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores = absolute(scores)
+scores1 = cross_val_score(model5, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error: " +str(mean(scores)) + " Standard Deviation: " +str(std(scores)))
+#print("RMSE error: " +str(mean(scores1)) + " Standard Deviation: " +str(std(scores1)))
+
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+
+#GradientBoost
+
+from sklearn.ensemble import GradientBoostingRegressor
+y1 = np.log(Ytrain)
+model6 = GradientBoostingRegressor()
+cv = RepeatedKFold(n_splits=10, n_repeats = 3, random_state = 1)
+scores = cross_val_score(model6, X, y1, scoring = 'neg_mean_absolute_error', cv=cv, n_jobs = -1)
+scores = absolute(scores)
+scores1 = cross_val_score(model6, X, y1, scoring = 'neg_root_mean_squared_error', cv=cv, n_jobs = -1)
+
+#print("Absolute error: " +str(mean(scores)) + " Standard Deviation: " +str(std(scores)))
+#print("RMSE error: " +str(mean(scores1)) + " Standard Deviation: " +str(std(scores1)))
+np.mean(scores), np.std(scores), np.mean(scores1), np.std(scores1)
+
+#PRedicting using XGBRegressor
+model4.fit(Xtrain, Ytrain)
+
+
+yhat = model4.predict(test_final)
+
+SalePrice = yhat
+
+Id = np.linspace(1461,2919, 1459)
+submission = np.column_stack((Id, SalePrice))
+
+submission = pd.DataFrame(submission, columns = ["Id", "SalePrice"])
+submission["Id"] = submission["Id"].apply(np.int32)
+submission
