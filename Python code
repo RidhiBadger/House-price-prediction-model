@@ -1,0 +1,37 @@
+import numpy as np #All numerical functions
+import pandas as pd # data processing
+from sklearn.model_selection import train_test_split
+import seaborn as sns
+import matplotlib.pyplot as plt
+from numpy import mean
+from numpy import std
+from numpy import absolute
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import ExtraTreesRegressor
+from xgboost import XGBRegressor
+from sklearn.model_selection import RepeatedKFold
+from sklearn.model_selection import cross_val_score
+#from xgboost.xgbclassifier import XGBClassifier
+from sklearn.linear_model import LinearRegression, Lasso, LassoCV
+from sklearn.ensemble import RandomForestRegressor
+
+#Import the data and check for dimensions
+train = pd.read_csv("train.csv")
+test = pd.read_csv("test.csv")
+train.shape, test.shape
+
+train.describe()
+
+#Check for count of non-null values for the columns, to understand which columns we need to further analysis#Check for count of non-null values for the columns, to understand which columns we need to further analysis
+#train.info()
+
+data = train.append(test)
+data.shape
+
+data["Years_old"] = 2021 - data["YrSold"]
+data = data.drop(["YrSold"], axis =1)
+data.head()
+
+
